@@ -5,7 +5,7 @@ models:
     meta:
       blockchain: ethereum
       project: safe
-      contributors: scherbovich, tschubotz, frankmaseo
+      contributors: scherbovich, tschubotz, frankmaseo, danielpartida
     freshness:
       warn_after: { count: 12, period: hour }
       error_after: { count: 24, period: hour }
@@ -24,6 +24,8 @@ models:
         description: "Version of initially created safe"
       - &block_date
         name: block_date
+      - &block_month
+        name: block_month
       - &creation_time
         name: creation_time
         description: "Date/time of safe creation"
@@ -41,9 +43,20 @@ models:
     config:
       tags: ['safe', 'transfers', 'ethereum']
     description: "Eth transfers for safes"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - address
+            - tx_hash
+            - trace_address
     columns:
+      - *blockchain
+      - &symbol
+        name: symbol
+        description: "Symbol of native gas token: ETH"
       - *address
       - *block_date
+      - *block_month
       - &block_time
         name: block_time
         description: "Date of Eth transfer"
@@ -53,6 +66,9 @@ models:
       - *tx_hash
       - &trace_address
         name: trace_address
+      - &amount_usd
+        name: amount_usd
+        description: "USD amount of transferred ETH"
 
   - name: safe_ethereum_singletons
     meta:
@@ -76,7 +92,7 @@ models:
     meta:
       blockchain: ethereum
       project: safe
-      contributors: tschubotz
+      contributors: tschubotz, danielpartida
     freshness:
       warn_after: { count: 12, period: hour }
       error_after: { count: 24, period: hour }
@@ -86,6 +102,7 @@ models:
     columns:
       - *blockchain
       - *block_date
+      - *block_month
       - *block_time
       - &block_number
         name: block_number
@@ -102,9 +119,12 @@ models:
       - &gas
         name: gas 
         description: "Gas limit set for transaction"
-      - &gas_used
-        name: gas_used
-        description: "Gas used during transaction"
+      - &execution_gas_used
+        name: execution_gas_used
+        description: "Execution gas used during transaction, for more details see https://dune.com/docs/data-tables/raw/evm/traces/?h=traces#gas-used-in-traces"
+      - &total_gas_used
+        name: total_gas_used
+        description: "Total gas used during transaction"
       - &tx_index
         name: tx_index
         description: "Transaction index"
@@ -147,12 +167,13 @@ models:
       - *blockchain
       - *block_time
       - *block_number
+      - *block_month
       - &project
         name: project
         description: "Project name"
-      - &airdrop_identifier
-        name: airdrop_identifier
-        description: "Airdrop identifier name"
+      - &airdrop_number
+        name: airdrop_number
+        description: "Airdrop identifier number"
       - &recipient
         name: recipient
         description: "Airdrop recipient"

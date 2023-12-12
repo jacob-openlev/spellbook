@@ -1,9 +1,6 @@
 {{ config(
-    alias = 'trades',
-    post_hook='{{ expose_spells(\'["ethereum"]\',
-                                "project",
-                                "balancer",
-                                \'["bizzyvinci"]\') }}'
+    schema = 'balancer_ethereum',
+    alias = 'trades'
     )
 }}
 
@@ -19,6 +16,7 @@ FROM (
         blockchain,
         project,
         version,
+        block_month,
         block_date,
         block_time,
         token_bought_symbol,
@@ -33,11 +31,12 @@ FROM (
         token_sold_address,
         taker,
         maker,
+        pool_id,
+        swap_fee,
         project_contract_address,
         tx_hash,
         tx_from,
         tx_to,
-        trace_address,
         evt_index
     FROM {{ dex_model }}
     {% if not loop.last %}

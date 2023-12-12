@@ -1,4 +1,6 @@
-{{ config(alias='trade_slippage',
+{{ config(
+        alias='trade_slippage',
+        
         post_hook='{{ expose_spells(\'["ethereum"]\',
                                     "project",
                                     "cow_protocol",

@@ -1,8 +1,9 @@
 
  {{
   config(
+        
         schema='arrakis_optimism',
-        alias='uniswap_pools',
+        alias = 'uniswap_pools',
         materialized = 'incremental',
         file_format = 'delta',
         incremental_strategy = 'merge',
@@ -13,9 +14,9 @@
 SELECT distinct
     'optimism' AS blockchain,
 
-    CONCAT(COALESCE(e0.symbol,token0)
+    CONCAT(COALESCE(e0.symbol,cast(token0 as varchar))
             , '/'
-            ,COALESCE(e1.symbol,token1)
+            ,COALESCE(e1.symbol,cast(token1 as varchar))
             ,'-'
             , TRIM(CAST(CAST(ROUND(fee / 1e4, 2) AS DECIMAL(20, 2)) AS VARCHAR(10) ))
             ,'%'
@@ -29,7 +30,7 @@ SELECT distinct
 FROM {{ source('arrakis_optimism', 'ArrakisFactoryV1_evt_PoolCreated') }} pc 
     INNER JOIN {{ ref('uniswap_optimism_pools') }} up 
         ON up.pool = pc.uniPool
-    LEFT JOIN {{ ref('tokens_erc20') }} e0 
+    LEFT JOIN {{ ref('tokens_erc20') }} e0
         ON e0.contract_address = up.token0
         AND e0.blockchain = 'optimism'
     LEFT JOIN {{ ref('tokens_erc20') }} e1
@@ -37,5 +38,5 @@ FROM {{ source('arrakis_optimism', 'ArrakisFactoryV1_evt_PoolCreated') }} pc
         AND e1.blockchain = 'optimism'
 
 {% if is_incremental() %}
-WHERE pc.evt_block_time >= date_trunc('day', now() - interval '1 month')
+WHERE pc.evt_block_time >= date_trunc('day', now() - interval '1' month)
 {% endif %}

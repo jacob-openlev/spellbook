@@ -1,4 +1,5 @@
 {{ config(
+    
     alias = 'pool_incentives_mappings'
     )
 }}

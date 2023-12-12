@@ -1,7 +1,8 @@
 {{
   config(
+      
         schema = 'chain_info',
-        alias='chain_ids'
+        alias = 'chain_ids'
   )
 }}
 
@@ -9,13 +10,13 @@
 -- data pull: https://github.com/MSilb7/msilb7-crypto-queries/blob/main/dune_spell_utils/chain_ids/gt_chain_ids.ipynb
 
 SELECT
-`name` AS chain_name
-,`chain` AS chain_shortname
-,`nativeCurrency` AS native_currency_symbol
-,`chainId` AS chain_id
-,`networkId` AS network_id
-,`infoURL` AS info_url
-,`explorer` AS explorer
+"name" AS chain_name
+,"chain" AS chain_shortname
+,"nativeCurrency" AS native_currency_symbol
+,CAST("chainId" as UINT256) AS chain_id
+,CAST("networkId" as UINT256) AS network_id
+,"infoURL" AS info_url
+,"explorer" AS explorer
 FROM ( values
  ('Ethereum Mainnet'	,'ETH'	,'ETH'	,'1'	,'1'	,'https://ethereum.org'	,'https://etherscan.io')
 ,('Expanse Network'	,'EXP'	,'EXP'	,'2'	,'1'	,'https://expanse.tech'	,'')
@@ -161,7 +162,7 @@ FROM ( values
 ,('Setheum'	,'Setheum'	,'SETM'	,'258'	,'258'	,'https://setheum.xyz'	,'')
 ,('SUR Blockchain Network'	,'SUR'	,'SRN'	,'262'	,'1'	,'https://surnet.org'	,'https://explorer.surnet.org')
 ,('High Performance Blockchain'	,'HPB'	,'HPB'	,'269'	,'269'	,'https://hpb.io'	,'https://hscan.org')
-,('zkSync alpha testnet'	,'ETH'	,'ETH'	,'280'	,'280'	,'https://v2-docs.zksync.io/'	,'https://zksync2-testnet.zkscan.io')
+,('zkSync Era'	,'ETH'	,'ETH'	,'324'	,'324'	,'https://era.zksync.io/docs'	,'https://explorer.zksync.io')
 ,('Boba Network'	,'ETH'	,'ETH'	,'288'	,'288'	,'https://boba.network'	,'https://bobascan.com')
 ,('Optimism on Gnosis'	,'OGC'	,'xDAI'	,'300'	,'300'	,'https://www.xdaichain.com/for-developers/optimism-optimistic-rollups-on-gc'	,'https://blockscout.com/xdai/optimism')
 ,('Filecoin - Mainnet'	,'FIL'	,'FIL'	,'314'	,'314'	,'https://filecoin.io'	,'https://filfox.info/en')
@@ -629,4 +630,4 @@ FROM ( values
 ,('Molereum Network'	,'ETH'	,'MOLE'	,'6022140761023'	,'6022140761023'	,'https://github.com/Jdubedition/molereum'	,'')
 ,('Godwoken Testnet (V1)'	,'GWT'	,'CKB'	,'868455272153094'	,'868455272153094'	,'https://www.nervos.org'	,'https://v1.aggron.gwscan.com')
 
-) a (`name`,`chain`,`nativeCurrency`,`chainId`,`networkId`,`infoURL`,`explorer`)
+) a ("name", "chain", "nativeCurrency", "chainId", "networkId", "infoURL", "explorer")

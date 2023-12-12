@@ -1,4 +1,5 @@
 {{ config(
+    
     schema = 'uniswap_arbitrum',
     alias = 'pools',
     materialized = 'incremental',
@@ -22,7 +23,7 @@ SELECT 'arbitrum' AS blockchain
 , evt_block_time AS creation_block_time
 , evt_block_number AS creation_block_number
 , contract_address
-FROM {{ source('uniswap_v3_arbitrum', 'UniswapV3Factory_evt_PoolCreated') }}
+FROM {{ source('uniswap_v3_arbitrum', 'Factory_evt_PoolCreated') }}
 {% if is_incremental() %}
-WHERE evt_block_time >= date_trunc("day", now() - interval '1 week')
+WHERE evt_block_time >= date_trunc('day', now() - interval '7' day)
 {% endif %}

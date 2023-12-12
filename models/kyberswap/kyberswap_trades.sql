@@ -1,17 +1,19 @@
 {{ config(
-        alias ='trades',
-        post_hook='{{ expose_spells(\'["avalanche_c","optimism","ethereum","arbitrum"]\',
+        alias = 'trades',
+        post_hook='{{ expose_spells(\'["avalanche_c","optimism","ethereum","arbitrum","bnb","polygon"]\',
                                 "project",
                                 "kyberswap",
-                                \'["zhongyiio", "hosuke", "ppclunghe", "gregshestakovlido"]\') }}'
+                                \'["zhongyiio", "hosuke", "ppclunghe", "gregshestakovlido", "nhd98z"]\') }}'
         )
 }}
 
 {% set kyber_models = [
- ref('kyberswap_avalanche_c_trades')
-,ref('kyberswap_optimism_trades')
-,ref('kyberswap_ethereum_trades')
-,ref('kyberswap_arbitrum_trades')
+    ref('kyberswap_avalanche_c_trades')
+    ,ref('kyberswap_optimism_trades')
+    ,ref('kyberswap_ethereum_trades')
+    ,ref('kyberswap_arbitrum_trades')
+    ,ref('kyberswap_bnb_trades')
+    ,ref('kyberswap_polygon_trades')
 ] %}
 
 
@@ -22,6 +24,7 @@ FROM (
         blockchain,
         project,
         version,
+        block_month,
         block_date,
         block_time,
         token_bought_symbol,
@@ -40,7 +43,6 @@ FROM (
         tx_hash,
         tx_from,
         tx_to,
-        trace_address,
         evt_index
     FROM {{ k_model }}
     {% if not loop.last %}
@@ -48,4 +50,3 @@ FROM (
     {% endif %}
     {% endfor %}
 )
-;

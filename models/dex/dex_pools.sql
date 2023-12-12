@@ -1,5 +1,6 @@
 {{ config(
-        alias ='pools',
+        
+        alias = 'pools',
         materialized = 'incremental',
         file_format = 'delta',
         incremental_strategy = 'merge',
@@ -16,9 +17,10 @@
  ref('uniswap_pools')
  ,ref('spiritswap_fantom_pools')
  ,ref('spookyswap_fantom_pools')
- ,ref('equalizer_exchange_fantom_pools')
+ ,ref('equalizer_fantom_pools')
  ,ref('wigoswap_fantom_pools')
  ,ref('spartacus_exchange_fantom_pools')
+ ,ref('mento_celo_pools')
 ] %}
 
 
@@ -39,7 +41,7 @@ FROM (
     FROM {{ dex_pool_model }}
     {% if not loop.last %}
     {% if is_incremental() %}
-    WHERE creation_block_time >= date_trunc("day", now() - interval '1 week')
+    WHERE creation_block_time >= date_trunc('day', now() - interval '7' Day)
     {% endif %}
     UNION ALL
     {% endif %}

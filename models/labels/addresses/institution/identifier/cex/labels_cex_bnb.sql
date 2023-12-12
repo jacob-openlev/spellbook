@@ -1,4 +1,6 @@
-{{config(alias='cex_bnb',
+{{config(
+        
+        alias = 'cex_bnb',
         post_hook='{{ expose_spells(\'["bnb"]\',
                                     "sector",
                                     "labels",

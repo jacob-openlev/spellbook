@@ -1,4 +1,5 @@
 {{ config(
+    
     alias = 'dao',
     materialized = 'table',
     file_format = 'delta',

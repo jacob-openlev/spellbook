@@ -1,9 +1,9 @@
 {{ config(
-        alias ='trades',
-        post_hook='{{ expose_spells(\'["ethereum","arbitrum", "optimism", "polygon", "bnb"]\',
+        alias = 'trades',
+        post_hook='{{ expose_spells(\'["ethereum", "arbitrum", "optimism", "polygon", "bnb", "base", "celo", "avalanche_c"]\',
                                 "project",
                                 "uniswap",
-                                \'["jeff-dude","mtitus6", "Henrystats", "chrispearcx"]\') }}'
+                                \'["jeff-dude", "mtitus6", "Henrystats", "chrispearcx", "wuligy", "tomfutago", "phu"]\') }}'
         )
 }}
 
@@ -13,6 +13,9 @@ ref('uniswap_ethereum_trades')
 , ref('uniswap_arbitrum_trades')
 , ref('uniswap_polygon_trades')
 , ref('uniswap_bnb_trades')
+, ref('uniswap_base_trades')
+, ref('uniswap_celo_trades')
+, ref('uniswap_avalanche_c_trades')
 ] %}
 
 
@@ -23,6 +26,7 @@ FROM (
         blockchain,
         project,
         version,
+        block_month,
         block_date,
         block_time,
         token_bought_symbol,
@@ -41,7 +45,6 @@ FROM (
         tx_hash,
         tx_from,
         tx_to,
-        trace_address,
         evt_index
     FROM {{ dex_model }}
     {% if not loop.last %}
@@ -49,4 +52,3 @@ FROM (
     {% endif %}
     {% endfor %}
 )
-;

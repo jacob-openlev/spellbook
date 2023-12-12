@@ -23,15 +23,18 @@ models:
       - &block_time
         name: block_time
         description: "Block time of transaction"
+      - &block_month
+        name: block_month
+        description: "Block month of transaction"
       - &block_number
         name: block_number
         description: "Block number of transaction"
       - &project
         name: project
         description: "Project name"
-      - &airdrop_identifier
-        name: airdrop_identifier
-        description: "Airdrop identifier name"
+      - &airdrop_number
+        name: airdrop_number
+        description: "Airdrop identifier number"
       - &recipient
         name: recipient
         description: "Airdrop recipient"
@@ -81,9 +84,9 @@ models:
             - evt_index
             - trace_address
       - check_dex_aggregator_seed:
-          blockchain: ethereum
-          project: paraswap
-          version: 4
+         blockchain: ethereum
+         project: paraswap
+         version: 4
     columns:
       - *blockchain
       - *project
@@ -164,9 +167,9 @@ models:
             - evt_index
             - trace_address
       - check_dex_aggregator_seed:
-          blockchain: ethereum
-          project: paraswap
-          version: 5
+         blockchain: ethereum
+         project: paraswap
+         version: 5
     columns:
       - *blockchain
       - *project

@@ -1,4 +1,5 @@
 {{ config(
+    
     alias = 'social',
     materialized = 'table',
     file_format = 'delta',

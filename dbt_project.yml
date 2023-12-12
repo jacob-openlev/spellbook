@@ -4,11 +4,18 @@ name: "spellbook"
 version: "1.0.0"
 config-version: 2
 
+quoting:
+  database: false
+  schema: false
+  identifier: false
+
 # This setting configures which "profile" dbt uses for this project.
-profile: "spellbook"
+profile: "spellbook-local"
 
 vars:
   DBT_ENV_CUSTOM_ENV_S3_BUCKET: "{{ env_var('DBT_ENV_CUSTOM_ENV_S3_BUCKET', 'local') }}"
+  DBT_ENV_INCREMENTAL_TIME: "{{ env_var('DBT_ENV_INCREMENTAL_TIME', '1') }}"
+  DBT_ENV_INCREMENTAL_TIME_UNIT: "{{ env_var('DBT_ENV_INCREMENTAL_TIME_UNIT', 'day') }}"
   ETH_ERC20_ADDRESS: '0x0000000000000000000000000000000000000000'
 
 # These configurations specify where dbt should look for different types of files.
@@ -45,12 +52,17 @@ seeds:
 models:
   spellbook:
     +post-hook:
+      - sql: "{{ set_trino_session_property(is_materialized(model), 'writer_scaling_min_data_processed', model.config.get('writer_min_size', '500MB')) }}"
+        transaction: true
+      - sql: "{{ set_trino_session_property(is_materialized(model), 'task_scale_writers_enabled', false) }}"
+        transaction: true
       - sql: "{{ optimize_spell(this, model.config.materialized) }}"
         transaction: true
       - sql: "{{ mark_as_spell(this, model.config.materialized) }}"
         transaction: true
     +materialized: view
     +schema: no_schema    # this should be overriden in model specific configs
+    +view_security: invoker
 
     aave:
       +schema: aave
@@ -85,6 +97,11 @@ models:
       ethereum:
         +schema: ens_ethereum
 
+    euler:
+      +schema: euler
+      ethereum:
+        +schema: euler_ethereum
+
     evms:
       +schema: evms
 
@@ -95,20 +112,6 @@ models:
 
     dex:
       +schema: dex
-      ethereum:
-        +schema: dex_ethereum
-      optimism:
-        +schema: dex_optimism
-      arbitrum:
-        +schema: dex_arbitrum
-      avalanche_c:
-        +schema: dex_avalanche_c
-      bnb:
-        +schema: dex_bnb
-      gnosis:
-        +schema: dex_gnosis
-      fantom:
-        +schema: dex_fantom
 
     airdrop:
       +schema: airdrop
@@ -158,12 +161,6 @@ models:
 
     nft:
       +schema: nft
-      arbitrum:
-        +schema: nft_arbitrum
-      avalanche_c:
-        +schema: nft_avalanche_c
-      bnb:
-        +schema: nft_bnb
       ethereum:
         +schema: nft_ethereum
         metadata:
@@ -171,16 +168,6 @@ models:
           +materialized: table
           +file_format: delta
           +tags: "static"
-      gnosis:
-        +schema: nft_gnosis
-      optimism:
-        +schema: nft_optimism
-      polygon:
-        +schema: nft_polygon
-      fantom:
-        +schema: nft_fantom
-      goerli:
-        +schema: nft_goerli
 
     cex:
       +schema: cex
@@ -228,6 +215,19 @@ models:
       ethereum:
         +schema: x2y2_ethereum
 
+    xchange:
+      +schema: xchange
+      arbitrum:
+        +schema: xchange_arbitrum
+      ethereum:
+        +schema: xchange_ethereum
+      #optimism:
+      #  +schema: xchange_optimism
+      polygon:
+        +schema: xchange_polygon
+      bnb:
+        +schema: xchange_bnb
+
     uniswap:
       +schema: uniswap
       arbitrum:
@@ -240,6 +240,10 @@ models:
         +schema: uniswap_polygon
       bnb:
         +schema: uniswap_bnb
+      base:
+        +schema: uniswap_base
+      celo:
+        +schema: uniswap_celo
 
     timeswap:
       +schema: timeswap
@@ -279,10 +283,34 @@ models:
       bnb:
         +schema: nomiswap_bnb
 
+    opx_finance:
+      +schema: opx_finance
+      optimism:
+        +schema: opx_finance_optimism
+
+    zodiac:
+      +schema: zodiac
+      ethereum:
+        +schema: zodiac_ethereum
+
     maverick:
       +schema: maverick
       ethereum:
         +schema: maverick_ethereum
+      bnb:
+        +schema: maverick_bnb
+
+    daohaus:
+      +schema: daohaus
+      ethereum:
+        +schema: daohaus_ethereum
+      gnosis:
+        +schema: daohaus_gnosis
+
+    colony:
+      +schema: colony
+      gnosis:
+        +schema: colony_gnosis
 
     sushiswap:
       +schema: sushiswap
@@ -302,6 +330,10 @@ models:
         +schema: sushiswap_polygon
       bnb:
         +schema: sushiswap_bnb
+      base:
+        +schema: sushiswap_base
+      celo:
+        +schema: sushiswap_celo
 
     zerion:
       +schema: zerion
@@ -327,15 +359,17 @@ models:
       avalanche_c:
         +schema: openocean_avalanche_c
 
+    syndicate:
+      +schema: syndicate
+      ethereum:
+        +schema: syndicate_ethereum
+      polygon:
+        +schema: syndicate_polygon
+
     babyswap:
       +schema: babyswap
       bnb:
         +schema: babyswap_bnb
-
-    oneplanet:
-      +schema: oneplanet
-      polygon:
-        +schema: oneplanet_polygon
 
     opensea:
       +schema: opensea
@@ -348,9 +382,8 @@ models:
       optimism:
         +schema: opensea_optimism
 
-
-#    abi:
-#      +schema: abi
+    abi:
+      +schema: abi
 
     gas:
       +schema: gas
@@ -364,6 +397,12 @@ models:
         +schema: gas_optimism
       arbitrum:
         +schema: gas_arbitrum
+      polygon:
+        +schema: gas_polygon
+      fantom:
+        +schema: gas_fantom
+      gnosis:
+        +schema: gas_gnosis
 
     gmx:
       +schema: gmx
@@ -408,11 +447,19 @@ models:
         +schema: seaport_avalanche_c
       polygon:
         +schema: seaport_polygon
+      base:
+        +schema: seaport_base
 
     balances:
       +schema: balances
       ethereum:
         +schema: balances_ethereum
+      arbitrum:
+        +schema: balances_arbitrum
+      bnb:
+        +schema: balances_bnb
+      polygon:
+        +schema: balances_polygon
 
     dodo:
       +schema: dodo
@@ -426,6 +473,8 @@ models:
         +schema: dodo_arbitrum
       optimism:
         +schema: dodo_optimism
+      base:
+        +schema: dodo_base
 
 
     spookyswap:
@@ -470,6 +519,9 @@ models:
       +schema: addresses_events_testnets
       goerli:
         +schema: addresses_events_testnets_goerli
+
+    addresses_summary:
+      +schema: addresses_summary
 
     aztec:
       +schema: aztec
@@ -516,6 +568,14 @@ models:
         +schema: tokens_solana
         +materialized: table
         +file_format: delta
+      base:
+        +schema: tokens_base
+        +materialized: table
+        +file_format: delta
+      celo:
+        +schema: tokens_celo
+        +materialized: table
+        +file_format: delta
 
     solana_utils:
       +schema: solana_utils
@@ -526,6 +586,8 @@ models:
         +schema: trader_joe_avalanche_c
       bnb:
         +schema: trader_joe_bnb
+      arbitrum:
+        +schema: trader_joe_arbitrum
 
     odos:
       +schema: odos
@@ -548,16 +610,15 @@ models:
         +schema: transfers_avalanche_c
       fantom:
         +schema: transfers_fantom
+      base:
+        +schema: transfers_base
+      celo:
+        +schema: transfers_celo
 
     sudoswap:
       +schema: sudoswap
       ethereum:
         +schema: sudoswap_ethereum
-
-    equalizer_exchange:
-      +schema: equalizer_exchange
-      fantom:
-        +schema: equalizer_exchange_fantom
 
     safe:
       +schema: safe
@@ -577,11 +638,22 @@ models:
         +schema: safe_fantom
       arbitrum:
         +schema: safe_arbitrum
+      goerli:
+        +schema: safe_goerli
+      base:
+        +schema: safe_base
 
     lifi:
       +schema: lifi
       fantom:
         +schema: lifi_fantom
+      optimism:
+        +schema: lifi_optimism
+
+    astaria:
+      +schema: astaria
+      ethereum:
+        +schema: astaria_ethereum
 
     aragon:
       +schema: aragon
@@ -591,6 +663,8 @@ models:
         +schema: aragon_gnosis
       polygon:
         +schema: aragon_polygon
+      base:
+        +schema: aragon_base
 
     spiritswap:
       +schema: spiritswap
@@ -652,15 +726,34 @@ models:
       optimism:
         +schema: synthetix_optimism
 
+    synapse:
+      +schema: synapse
+      arbitrum:
+        +schema: synapse_arbitrum
+      avalanche_c:
+        +schema: synapse_avalanche_c
+      bnb:
+        +schema: synapse_bnb
+      ethereum:
+        +schema: synapse_ethereum
+      fantom:
+        +schema: synapse_fantom
+      optimism:
+        +schema: synapse_optimism
+      polygon:
+        +schema: synapse_polygon
+
+    fiat_dao:
+      +schema: fiat_dao
+      ethereum:
+        +schema: fiat_dao_ethereum
+
     integral:
       +schema: integral
       arbitrum:
         +schema: integral_arbitrum
       ethereum:
         +schema: integral_ethereum
-
-    integration_test:
-      +schema: integration_test
 
     curvefi:
       +schema: curvefi
@@ -689,8 +782,6 @@ models:
 
     keep3r_network:
       +schema: keep3r_network
-      ethereum:
-        +schema: keep3r_network_ethereum
 
     airswap:
       +schema: airswap
@@ -713,21 +804,23 @@ models:
 
     chainlink:
       +schema: chainlink
+      arbitrum:
+        +schema: chainlink_arbitrum
+      avalanche_c:
+        +schema: chainlink_avalanche_c
+      bnb:
+        +schema: chainlink_bnb
+      ethereum:
+        +schema: chainlink_ethereum
+      fantom:
+        +schema: chainlink_fantom
+      gnosis:
+        +schema: chainlink_gnosis
       optimism:
         +schema: chainlink_optimism
       polygon:
         +schema: chainlink_polygon
-      bnb:
-        +schema: chainlink_bnb
 
-    contracts:
-      +schema: contracts
-      optimism:
-        +schema: contracts_optimism
-      bnb:
-        +schema: contracts_bnb
-      fantom:
-        +schema: contracts_fantom
 
     clipper:
       +schema: clipper
@@ -791,11 +884,20 @@ models:
         +schema: pancakeswap_bnb
       ethereum:
         +schema: pancakeswap_ethereum
+      arbitrum:
+        +schema: pancakeswap_arbitrum
+      base:
+        +schema: pancakeswap_base
 
     bancor:
       +schema: bancor
       ethereum:
         +schema: bancor_ethereum
+
+    carbon_defi:
+      +schema: carbon_defi
+      ethereum:
+        +schema: carbon_defi_ethereum
 
     kyberswap:
       +schema: kyberswap
@@ -807,6 +909,10 @@ models:
         +schema: kyberswap_ethereum
       arbitrum:
         +schema: kyberswap_arbitrum
+      bnb:
+        +schema: kyberswap_bnb
+      polygon:
+        +schema: kyberswap_polygon
 
     hubble_exchange:
       +schema: hubble_exchange
@@ -867,11 +973,6 @@ models:
       ethereum:
         +schema: nexusmutual_ethereum
 
-    quix:
-      +schema: quix
-      optimism:
-        +schema: quix_optimism
-
     zeroex:
       +schema: zeroex
       ethereum:
@@ -888,6 +989,8 @@ models:
         +schema: zeroex_arbitrum
       bnb:
         +schema: zeroex_bnb
+      celo:
+        +schema: zeroex_celo
 
 
     ampleforth:
@@ -934,6 +1037,8 @@ models:
       +schema: galxe
       ethereum:
         +schema: galxe_ethereum
+      optimism:
+        +schema: galxe_optimism
 
     gearbox:
       +schema: gearbox
@@ -969,6 +1074,11 @@ models:
       +schema: tokenfy
       ethereum:
         +schema: tokenfy_ethereum
+
+    tokenlon:
+      +schema: tokenlon
+      ethereum:
+        +schema: tokenlon_ethereum
 
     thales:
       +schema: thales
@@ -1087,6 +1197,8 @@ models:
       +schema: rubicon
       optimism:
         +schema: rubicon_optimism
+      arbitrum:
+        +schema: rubicon_arbitrum
 
     beethoven_x:
       +schema: beethoven_x
@@ -1099,11 +1211,6 @@ models:
       +schema: zipswap
       optimism:
         +schema: zipswap_optimism
-
-    sharky:
-      +schema: sharky
-      solana:
-        +schema: sharky_solana
 
     arbswap:
       +schema: arbswap
@@ -1118,18 +1225,10 @@ models:
       ethereum:
         +schema: oneinch_ethereum
 
-    nftearth:
-      +schema: nftearth
-      optimism:
-        +schema: nftearth_optimism
-
     pooltogether:
       +schema: pooltogether
       ethereum:
         +schema: pooltogether_ethereum
-
-    method_ids:
-      +schema: method_ids
 
     coinbase_wallet_quests:
       +schema: coinbase_wallet_quests
@@ -1180,6 +1279,10 @@ models:
         +schema: layerzero_polygon
       bnb:
         +schema: layerzero_bnb
+      celo:
+        +schema: layerzero_celo
+      base:
+        +schema: layerzero_base
 
     onepunchswap:
       +schema: onepunchswap
@@ -1200,8 +1303,72 @@ models:
       avalanche_c:
         +schema: glacier_avalanche_c
 
+    tokemak:
+      +schema: tokemak
+      ethereum:
+        +schema: tokemak_ethereum
+
 
     thena:
       +schema: thena
       bnb:
         +schema: thena_bnb
+
+    sound_xyz:
+      +schema: sound_xyz
+      optimism:
+        +schema: sound_xyz_optimism
+
+
+    quests:
+      +schema: quests
+
+    account_abstraction:
+      erc4337:
+        +schema: account_abstraction_erc4337
+        ethereum:
+          +schema: account_abstraction_erc4337_ethereum
+        avalanche_c:
+          +schema: account_abstraction_erc4337_avalanche_c
+        arbitrum:
+          +schema: account_abstraction_erc4337_arbitrum
+        optimism:
+          +schema: account_abstraction_erc4337_optimism
+        polygon:
+          +schema: account_abstraction_erc4337_polygon
+        gnosis:
+          +schema: account_abstraction_erc4337_gnosis
+        base:
+          +schema: account_abstraction_erc4337_base
+        bnb:
+          +schema: account_abstraction_erc4337_bnb
+
+    zora:
+      +schema: zora
+      optimism:
+        +schema: zora_optimism
+
+    decent:
+      +schema: decent
+      optimism:
+        +schema: decent_optimism
+
+    mirror:
+      +schema: mirror
+      optimism:
+        +schema: mirror_optimism
+
+    worldcoin:
+      +schema: worldcoin
+      optimism:
+        +schema: worldcoin_optimism
+
+    aerodrome:
+      +schema: aerodrome
+      base:
+        +schema: aerodrome_base
+
+    openxswap:
+      +schema: openxswap
+      optimism:
+        +schema: openxswap_optimism

@@ -1,5 +1,5 @@
 {{ config(
-        alias ='trades',
+        alias = 'trades',
         post_hook='{{ expose_spells(\'["arbitrum"]\',
                                 "project",
                                 "camelot",
@@ -8,7 +8,8 @@
 }}
 
 {% set camelot_models = [
-ref('camelot_v1_arbitrum_trades')
+ref('camelot_v2_arbitrum_trades'),
+ref('camelot_v3_arbitrum_trades')
 ] %}
 
 
@@ -19,6 +20,7 @@ FROM (
         blockchain,
         project,
         version,
+        block_month,
         block_date,
         block_time,
         token_bought_symbol,
@@ -37,7 +39,6 @@ FROM (
         tx_hash,
         tx_from,
         tx_to,
-        trace_address,
         evt_index
     FROM {{ dex_model }}
     {% if not loop.last %}
@@ -45,4 +46,4 @@ FROM (
     {% endif %}
     {% endfor %}
 )
-;
+
